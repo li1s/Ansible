@@ -1,0 +1,19 @@
+---
+- name: Playbook to configure IPA clients with username/password
+  hosts: ipaclients
+  become: true
+
+  tasks:
+  - name: Install IPA client package
+    package:
+      name: ipa-client
+      state: present
+  
+  - name: Configure IPA client
+    ipaclient:
+      state: present
+      domain: "{{ ipaclient_domain }}"
+      realm: "{{ ipaclient_realm }}"
+      principal: "{{ ipaclient_principal }}"
+      password: "{{ ipaclient_password }}"
+      extra_args: "{{ipaclient_extraargs }}"
