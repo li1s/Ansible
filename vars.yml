@@ -1,0 +1,16 @@
+package_lists:
+  workstations:
+    - ansible
+    - git
+    - tmux
+    - bash-completion
+    - vim-enhanced
+  nodes:
+    - vim-enhanced
+    - bash-completion
+    - chrony
+yum_repos:
+  - ansible-2-for-rhel-8-x86_64-rpms:
+      enabled: yes
+git_ws_repos:
+  - 'https://github.com/xtophd/RHEL8-Workshop.git'
