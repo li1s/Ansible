@@ -1,0 +1,69 @@
+---
+  - name: Workstation specific config
+    gather_facts: false
+    hosts: workstations
+    vars_files:
+      - vars/vm_vars.yml
+    tasks:
+
+    - name: ssh keypair
+      openssh_keypair:
+        path: /root/.ssh/id_rsa
+      register: ssh_key_pair
+
+    - name: 'Ws root pubkey in vms_student(student* group of ws) group vars'
+      include: tasks/inv_vars.yml
+          var_dir="group_vars/{{ group_names | list | select('match', '^vms_student[0-9]+$')|list| first }}"
+          var_name="root_pubkey"
+          var_value="{{ ssh_key_pair['public_key'] }}"
+
+
+    - name: Workshop inventory ws to ws connection = local
+      lineinfile:
+        dest: "../resources/rhel8-workshop/git_repos/RHEL8-Workshop/config/rhel8-workshop"
+        state: present
+        regexp: '^workstation.example.com'
+        line: 'workstation.example.com ansible_connection=local'
+      delegate_to: localhost
+      run_once: yes
+
+    - name: Workshop ansible config don't check node's ssh serts
+      ini_file:
+        path: "../resources/rhel8-workshop/git_repos/RHEL8-Workshop/config/ansible.cfg"
+        section: defaults
+        option: host_key_checking
+        value: no
+      delegate_to: localhost
+      run_once: yes
+
+    - name: Copy git repo to workstations
+      copy:
+        src: "../resources/rhel8-workshop/git_repos/RHEL8-Workshop"
+        dest: "/root/"
+        remote_src: no
+
+    - name: Workshop lab deploy executable right away
+      file:
+        path: "/root/RHEL8-Workshop/prepare-rhel8-workshop.sh"
+        mode: '0755'
+
+    - name: Workshop default ansible.cfg
+      lineinfile:
+        dest: "/root/.bash_profile"
+        state: present
+        line: 'export ANSIBLE_CONFIG=/root/RHEL8-Workshop/config/ansible.cfg'
+
+    - name: Fix Failed to set locale, defaulting to C
+      template:
+        src: templates/set_lang_env.j2
+        dest: /etc/profile.d/set_lang_env.sh
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Change default stratis pool name to labpool
+      replace:
+        path: "/root/RHEL8-Workshop/playbooks/templates/cheat-stratis-fstab.j2"
+        regexp: 'summit'
+        replace: 'lab'
+        # validate: '/usr/sbin/mount -fav'
