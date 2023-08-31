@@ -1,0 +1,13 @@
+# Пример dhcpd.conf.j2
+
+# Установка параметров DHCP-сервера
+ddns-update-style none;
+default-lease-time 600;
+max-lease-time 7200;
+
+# Определение сетей и диапазонов IP-адресов
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.100 192.168.1.200;
+  option routers 192.168.1.1;
+  option domain-name-servers 77.88.8.8;
+}
