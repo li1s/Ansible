@@ -1,0 +1,21 @@
+---
+- name: Установка и настройка DHCP-клиента
+  hosts: dhcp-clients
+  become: true
+
+  tasks:
+    - name: Установка пакета isc-dhcp-client
+      package:
+        name: isc-dhcp-client
+        state: present
+
+    - name: Конфигурация интерфейса для DHCP
+      lineinfile:
+        path: /etc/network/interfaces
+        line: "iface eth0 inet dhcp"
+        state: present
+
+    - name: Перезапуск сетевых интерфейсов
+      service:
+        name: networking
+        state: restarted
